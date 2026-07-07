@@ -1,0 +1,5 @@
+store_id,product_id,price
+STORE_001,PROD_A,150
+STORE_001,PROD_B,200
+STORE_002,PROD_C,-50
+,PROD_D,100

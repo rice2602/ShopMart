@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShopMart Observability Dashboard</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --border-color: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --primary: #6366f1;
+            --primary-glow: rgba(99, 102, 241, 0.15);
+            --success: #10b981;
+            --success-glow: rgba(16, 185, 129, 0.15);
+            --warning: #f59e0b;
+            --warning-glow: rgba(245, 158, 11, 0.15);
+            --danger: #ef4444;
+            --danger-glow: rgba(239, 68, 68, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 2rem;
+            line-height: 1.5;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header Style */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2.5rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1.5rem;
+        }
+
+        .header-title h1 {
+            font-size: 2.25rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #a5b4fc 0%, #6366f1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.025em;
+        }
+
+        .header-title p {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-top: 0.25rem;
+        }
+
+        .system-badge {
+            background-color: var(--primary-glow);
+            border: 1px solid var(--primary);
+            color: #c7d2fe;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        .system-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--success);
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 8px var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .stat-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            border-color: #475569;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background-color: var(--primary);
+        }
+
+        .stat-card.success-border::before { background-color: var(--success); }
+        .stat-card.warning-border::before { background-color: var(--warning); }
+        .stat-card.danger-border::before { background-color: var(--danger); }
+
+        .stat-title {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-top: 0.5rem;
+            letter-spacing: -0.025em;
+        }
+
+        .stat-desc {
+            font-size: 0.825rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        /* Simulation Controls */
+        .simulation-section {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.7) 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 2.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .simulation-title h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #c7d2fe;
+        }
+
+        .simulation-title p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            background-color: #334155;
+            border-color: #475569;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+        }
+
+        .btn-primary:hover {
+            background-color: #4f46e5;
+            border-color: #4f46e5;
+            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-warning {
+            background-color: rgba(245, 158, 11, 0.2);
+            border-color: var(--warning);
+            color: #fde68a;
+        }
+
+        .btn-warning:hover {
+            background-color: rgba(245, 158, 11, 0.35);
+        }
+
+        .btn-danger {
+            background-color: rgba(239, 68, 68, 0.2);
+            border-color: var(--danger);
+            color: #fca5a5;
+        }
+
+        .btn-danger:hover {
+            background-color: rgba(239, 68, 68, 0.35);
+        }
+
+        /* Data Logs Table Section */
+        .logs-section {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            overflow: hidden;
+        }
+
+        .logs-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .logs-header h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.95rem;
+        }
+
+        th {
+            color: var(--text-secondary);
+            font-weight: 600;
+            padding: 1rem;
+            border-bottom: 2px solid var(--border-color);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+
+        td {
+            padding: 1.1rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background-color: rgba(51, 65, 85, 0.3);
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .badge-success {
+            background-color: var(--success-glow);
+            color: #34d399;
+            border: 1px solid var(--success);
+        }
+
+        .badge-warning {
+            background-color: var(--warning-glow);
+            color: #fbbf24;
+            border: 1px solid var(--warning);
+        }
+
+        .badge-danger {
+            background-color: var(--danger-glow);
+            color: #f87171;
+            border: 1px solid var(--danger);
+        }
+
+        .file-name {
+            font-family: monospace;
+            font-weight: 500;
+            color: #e2e8f0;
+        }
+
+        .timestamp {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .error-msg {
+            color: var(--danger);
+            font-size: 0.85rem;
+            max-width: 300px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: inline-block;
+        }
+
+        /* Overlay notification toast */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background-color: var(--bg-card);
+            border: 1.5px solid var(--primary);
+            border-radius: 0.75rem;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transform: translateY(150%);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+        }
+
+        .toast-title {
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+
+        .toast-body {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            .system-badge {
+                align-self: flex-end;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Dashboard Header -->
+        <header>
+            <div class="header-title">
+                <h1>ShopMart Pipeline Ingestion Observability</h1>
+                <p>Data lake pipeline metrics, status reports, and execution controls</p>
+            </div>
+            <div class="system-badge">
+                <span class="system-dot"></span>
+                <span>SYSTEM STATUS: ACTIVE</span>
+            </div>
+        </header>
+
+        <!-- Stats Overview Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-title">Total Files Processed</div>
+                <div class="stat-value">{{ stats.total_files }}</div>
+                <div class="stat-desc">Files uploaded to raw data zone</div>
+            </div>
+            <div class="stat-card success-border">
+                <div class="stat-title">Successful Executions</div>
+                <div class="stat-value" style="color: var(--success);">{{ stats.successful_files }}</div>
+                <div class="stat-desc">Overall success rate: {{ stats.success_rate }}%</div>
+            </div>
+            <div class="stat-card warning-border">
+                <div class="stat-title">Accumulated Revenue</div>
+                <div class="stat-value" style="color: #c7d2fe;">${{ "{:,.2f}".format(stats.total_revenue) }}</div>
+                <div class="stat-desc">Sum of verified daily revenues</div>
+            </div>
+            <div class="stat-card danger-border">
+                <div class="stat-title">Anomalies Isolated</div>
+                <div class="stat-value" style="color: var(--danger);">{{ stats.total_quarantined_records }}</div>
+                <div class="stat-desc">Total rows routed to quarantine</div>
+            </div>
+        </div>
+
+        <!-- Simulation Sandbox -->
+        <div class="simulation-section">
+            <div class="simulation-title">
+                <h3>Pipeline Ingestion Simulator</h3>
+                <p>Simulate POS store file uploads to trigger ingestion, cleaning, metadata storage, and alerting workflows.</p>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="runSimulation('happy')">
+                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M12.736 14H5.666a2 2 0 0 1-1.954-1.555L1.144 4.54a.5.5 0 0 1 .586-.586l6.825 1.139a1 1 0 0 0 .322-.002l5.422-.904a.5.5 0 0 1 .586.586l-1.144 7.904A2 2 0 0 1 12.736 14zM4.07 3.03l.942 6.5A.5.5 0 0 0 5.5 10h5a.5.5 0 0 0 .488-.47l.942-6.5a.5.5 0 0 0-.488-.53h-7a.5.5 0 0 0-.488.53z"/></svg>
+                    Simulate Happy Upload
+                </button>
+                <button class="btn btn-warning" onclick="runSimulation('quality_warning')">
+                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M7.938 2.016A.13.13 0 0 1 8.002 2a.13.13 0 0 1 .063.016.146.146 0 0 1 .054.057l6.857 11.667c.036.06.035.124.002.183a.163.163 0 0 1-.054.06.116.116 0 0 1-.066.017H1.146a.115.115 0 0 1-.066-.017.163.163 0 0 1-.054-.06.176.176 0 0 1 .002-.183L7.884 2.073a.147.147 0 0 1 .054-.057zm1.044 10.396a.81.81 0 1 0-1.62 0 .81.81 0 0 0 1.62 0zm-.08-6.19a.9.9 0 0 0-1.47 0l-.82 3.255a.417.417 0 0 0 .416.477h2.518a.417.417 0 0 0 .416-.477l-.82-3.255z"/></svg>
+                    Simulate Incomplete & Duplicates
+                </button>
+                <button class="btn btn-danger" onclick="runSimulation('corrupt')">
+                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>
+                    Simulate Schema Failure
+                </button>
+            </div>
+        </div>
+
+        <!-- Metadata Log Table -->
+        <div class="logs-section">
+            <div class="logs-header">
+                <h3>Pipeline Execution Registry</h3>
+            </div>
+            
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>File Name</th>
+                            <th>Status</th>
+                            <th>Timestamp (UTC)</th>
+                            <th>Processed Rows</th>
+                            <th>Quarantine Rows</th>
+                            <th>Daily Revenue</th>
+                            <th>Top Product</th>
+                            <th>Err Detail</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for key, val in metadata.items()|sort(attribute='1.timestamp', reverse=true) %}
+                        <tr>
+                            <td class="file-name">{{ val.file_name }}</td>
+                            <td>
+                                {% if val.processing_status == 'SUCCESS' %}
+                                <span class="badge badge-success">Success</span>
+                                {% elif val.processing_status == 'DUPLICATE' %}
+                                <span class="badge badge-warning">Duplicate</span>
+                                {% else %}
+                                <span class="badge badge-danger">Failed</span>
+                                {% endif %}
+                            </td>
+                            <td class="timestamp">{{ val.timestamp }}</td>
+                            <td>{{ val.record_count }}</td>
+                            <td>
+                                {% if val.metrics %}
+                                    {{ val.metrics.quarantined_records_count }}
+                                {% else %}
+                                    0
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if val.metrics %}
+                                    ${{ "{:,.2f}".format(val.metrics.daily_revenue) }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if val.metrics %}
+                                    {{ val.metrics.top_product }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if val.error_reason != 'N/A' %}
+                                <span class="error-msg" title="{{ val.error_reason }}">{{ val.error_reason }}</span>
+                                {% else %}
+                                <span style="color: var(--text-secondary); font-size: 0.85rem;">None</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast">
+        <div>
+            <div id="toast-title" class="toast-title">Ingestion Triggered</div>
+            <div id="toast-body" class="toast-body">Pipeline execution started for raw upload.</div>
+        </div>
+    </div>
+
+    <script>
+        function showToast(title, body, isSuccess=true) {
+            const toast = document.getElementById("toast");
+            const tTitle = document.getElementById("toast-title");
+            const tBody = document.getElementById("toast-body");
+            
+            tTitle.innerText = title;
+            tBody.innerText = body;
+            
+            toast.style.borderColor = isSuccess ? "var(--success)" : "var(--danger)";
+            
+            toast.classList.add("show");
+            
+            setTimeout(() => {
+                toast.classList.remove("show");
+            }, 3000);
+        }
+
+        function runSimulation(scenario) {
+            showToast("Simulation Dispatched", "Sending file payload to raw intake bucket...");
+            
+            fetch("/api/simulate", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ scenario: scenario })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    showToast("Execution Error", data.error, false);
+                } else {
+                    const result = data.pipeline_result;
+                    let msg = `Pipeline outcome: ${result.status}`;
+                    if (result.processed_records !== undefined) {
+                        msg += ` | Clean: ${result.processed_records}, Quarantined: ${result.quarantined_records}`;
+                    }
+                    showToast("Simulation Complete", msg, result.status !== "FAILED");
+                    
+                    // Reload dashboard to reflect updates after 1.5s
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1800);
+                }
+            })
+            .catch(err => {
+                showToast("Simulation Failed", "API network failure: " + err, false);
+            });
+        }
+    </script>
+</body>
+</html>

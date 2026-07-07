@@ -1,0 +1,49 @@
+name: Continuous Deployment
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  terraform-deploy:
+    name: Terraform Apply (AWS Deploy)
+    runs-on: ubuntu-latest
+    
+    # Declare credentials as environment secrets
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.0
+
+      - name: Terraform Init
+        run: |
+          cd iac
+          # Run terraform init with remote state or local state configuration.
+          # Note: In production, backend should be configured using S3 backend.
+          terraform init
+
+      - name: Terraform Plan
+        run: |
+          cd iac
+          terraform plan -out=tfplan
+
+      - name: Terraform Apply
+        # Run only if secrets are populated (safety check to support dry run in fork PRs/unconfigured repositories)
+        if: "${{ env.AWS_ACCESS_KEY_ID != '' }}"
+        run: |
+          cd iac
+          terraform apply -auto-approve tfplan

@@ -1,0 +1,47 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.venv/
+venv/
+ENV/
+env/
+*.egg-info/
+dist/
+build/
+
+# --- Terraform ---
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+.terraform.lock.hcl
+
+# --- Local Simulator Storage (ShopMart) ---
+# Ignore raw, processed, and quarantine files generated during local test simulations
+data/
+# Ignore any environment credentials template configs
+.env
+
+# --- Project Management & Personal Developer Notes ---
+# Ensures checklists or planning guides are not tracked in target repo
+task.md
+walkthrough.md
+implementation_plan.md
+*.original.md
+
+# --- OS Artifacts ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Repo-Specific Exclusions ---
+# Private assessment brief — not for public repositories
+CE_Intern_Assessment.pdf
+# Old draft docs folder from prior work iteration
+Previous work/
+# Windows file-copy duplicates (created by Ctrl+C / Ctrl+V in Explorer)
+*- Copy.csv
+*- Copy - Copy.csv
+*- Copy.csv
