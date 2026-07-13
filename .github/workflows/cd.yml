@@ -1,13 +1,16 @@
 name: Continuous Deployment
 
 on:
-  push:
-    branches: [ main ]
+  workflow_run:
+    workflows: ["Continuous Integration"]
+    types: [completed]
+    branches: [main]
   workflow_dispatch:
 
 jobs:
   terraform-deploy:
     name: Terraform Apply (AWS Deploy)
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
     env:
