@@ -29,6 +29,7 @@ data/
 task.md
 walkthrough.md
 implementation_plan.md
+cheatsheet.md
 *.original.md
 
 # --- OS Artifacts ---
