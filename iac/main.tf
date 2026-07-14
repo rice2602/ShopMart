@@ -163,7 +163,7 @@ resource "aws_lambda_function" "processor" {
 
   environment {
     variables = {
-      PROCESSED_BUCKET_NAME = aws_s3_bucket.processed_data.id
+      PROCESSED_BUCKET_NAME  = aws_s3_bucket.processed_data.id
       QUARANTINE_BUCKET_NAME = aws_s3_bucket.quarantine_data.id
       METADATA_TABLE_NAME    = aws_dynamodb_table.metadata.name
       SNS_TOPIC_ARN          = aws_sns_topic.alerts.arn
