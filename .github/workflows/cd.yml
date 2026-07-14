@@ -33,25 +33,85 @@ jobs:
       - name: Verify AWS credentials
         run: |
           if [ -z "${AWS_ACCESS_KEY_ID}" ] || [ -z "${AWS_SECRET_ACCESS_KEY}" ]; then
-            echo "AWS credentials are not configured in GitHub Secrets. Skipping Terraform deployment."
-            exit 0
+            echo "::error::AWS credentials are not configured in GitHub Secrets. Deployment skipped."
+            exit 1
           fi
           echo "AWS credentials detected. Proceeding with deployment."
 
       - name: Terraform Init
-        if: ${{ env.AWS_ACCESS_KEY_ID != '' && env.AWS_SECRET_ACCESS_KEY != '' }}
         run: |
           cd iac
           terraform init -input=false -backend-config=../backend.hcl
 
       - name: Terraform Plan
-        if: ${{ env.AWS_ACCESS_KEY_ID != '' && env.AWS_SECRET_ACCESS_KEY != '' }}
+        id: plan
         run: |
           cd iac
-          terraform plan -input=false -out=tfplan
+          terraform plan -input=false -out=tfplan -no-color 2>&1 | tee plan_output.txt
+          echo "plan_exit_code=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
 
       - name: Terraform Apply
-        if: ${{ env.AWS_ACCESS_KEY_ID != '' && env.AWS_SECRET_ACCESS_KEY != '' }}
+        id: apply
         run: |
           cd iac
-          terraform apply -auto-approve -input=false tfplan
+          terraform apply -auto-approve -input=false tfplan 2>&1 | tee apply_output.txt
+          echo "apply_exit_code=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
+
+      - name: Deployment Summary
+        if: steps.apply.outputs.apply_exit_code == '0'
+        run: |
+          cd iac
+          echo ""
+          echo "=========================================="
+          echo "  ShopMart Pipeline - Deployment Complete"
+          echo "=========================================="
+          echo ""
+
+          echo "--- S3 Storage ---"
+          terraform output -raw raw_bucket_name
+          terraform output -raw processed_bucket_name
+          terraform output -raw quarantine_bucket_name
+          echo ""
+
+          echo "--- DynamoDB ---"
+          terraform output -raw dynamodb_metadata_table
+          echo ""
+
+          echo "--- Lambda ---"
+          terraform output -raw lambda_processor_arn
+          echo ""
+
+          echo "--- SNS Alerts ---"
+          terraform output -raw sns_alerts_arn
+          echo ""
+
+          echo "--- IAM ---"
+          terraform output -raw lambda_role_arn
+          echo ""
+
+          echo "--- Region ---"
+          terraform output -raw region
+          echo ""
+
+          echo "--- All Resources in State ---"
+          terraform state list
+          echo ""
+
+          echo "--- Full Deployment Summary ---"
+          terraform output deployment_summary
+
+      - name: Upload Plan Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan
+          path: iac/plan_output.txt
+          retention-days: 5
+
+      - name: Upload Apply Log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-apply-log
+          path: iac/apply_output.txt
+          retention-days: 5
