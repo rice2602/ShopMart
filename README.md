@@ -64,7 +64,7 @@ To explore individual sections of the project, refer to these guides:
 Ensure Python 3.11 is installed, install dependencies, and execute the test runner:
 ```bash
 # Install dependencies
-pip install pandas pyarrow pytest flask boto3
+pip install -r requirements.txt
 
 # Run tests
 python -m pytest -v

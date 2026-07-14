@@ -6,6 +6,14 @@ terraform {
       version = "~> 5.0"
     }
   }
+
+  backend "s3" {
+    bucket         = "shopmart-terraform-state"
+    key            = "pipeline/terraform.tfstate"
+    region         = "us-east-1"
+    dynamodb_table = "shopmart-terraform-locks"
+    encrypt        = true
+  }
 }
 
 provider "aws" {
@@ -158,7 +166,7 @@ resource "aws_lambda_function" "processor" {
   # Pre-built AWS Data Wrangler layer containing Pandas and PyArrow (AWS SDK for Pandas)
   # Standard layer ARN pattern for Python 3.11 in us-east-1
   layers = [
-    "arn:aws:lambda:${var.aws_region}:336392948345:layer:AWSSDKPandas-Python311:12"
+    "arn:aws:lambda:${var.aws_region}:336392948345:layer:AWSSDKPandas-Python311:${var.pandas_layer_version}"
   ]
 
   environment {

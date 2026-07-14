@@ -190,11 +190,11 @@ class ShopMartPipeline:
             dup_mask = df_good.duplicated(subset=["order_id", "product_id"], keep="first")
             df_dups = df_good[dup_mask].copy()
             df_good = df_good[~dup_mask].copy()
-            
+
             if not df_dups.empty:
-                # Add duplicate rows back to bad dataframe
-                # Coerce to match columns
-                df_bad = pd.concat([df_bad, df[df.index.isin(df_dups.index)]]).drop_duplicates()
+                # Add duplicate rows back to bad dataframe using original indices
+                dup_original = df[df.index.isin(df_dups.index)].copy().reset_index(drop=True)
+                df_bad = pd.concat([df_bad.reset_index(drop=True), dup_original], ignore_index=True)
 
         # 4. Computation and Aggregation on valid, non-duplicate records
         metrics = None
