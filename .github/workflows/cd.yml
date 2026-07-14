@@ -42,7 +42,7 @@ jobs:
         if: ${{ env.AWS_ACCESS_KEY_ID != '' && env.AWS_SECRET_ACCESS_KEY != '' }}
         run: |
           cd iac
-          terraform init -input=false -backend-config=backend.hcl
+          terraform init -input=false -backend-config=../backend.hcl
 
       - name: Terraform Plan
         if: ${{ env.AWS_ACCESS_KEY_ID != '' && env.AWS_SECRET_ACCESS_KEY != '' }}

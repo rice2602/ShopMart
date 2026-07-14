@@ -58,7 +58,7 @@ jobs:
       - name: Terraform Validate
         run: |
           cd iac
-          terraform init -backend=false
+          terraform init -input=false
           terraform validate
 
   deploy:
