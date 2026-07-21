@@ -75,37 +75,32 @@ To access the application through the Ingress controller hostname, add a host ro
 ---
 
 ## Step 6: GitOps Application Deployment with ArgoCD
-To practice GitOps practices by syncing your Kubernetes manifests directly from your remote Git repository:
+Single-repo GitOps: ArgoCD watches the same repo's `devops/k8s/` folder and auto-syncs K8s manifests.
 
 1. **Install ArgoCD:**
    ```bash
    kubectl create namespace argocd
-   kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+   kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/v2.13.3/manifests/install.yaml
    ```
-2. **Define the Application Manifest:**
-   Save the following specification as `argocd-app.yaml` (replace `<your-username>` with your GitHub repository URL):
-   ```yaml
-   apiVersion: argoproj.io/v1alpha1
-   kind: Application
-   metadata:
-     name: shopmart-observability
-     namespace: argocd
-   spec:
-     project: default
-     source:
-       repoURL: 'https://github.com/<your-username>/ShopMart.git'
-       targetRevision: HEAD
-       path: devops/k8s
-     destination:
-       server: 'https://kubernetes.default.svc'
-       namespace: default
-     syncPolicy:
-       automated:
-         prune: true
-         selfHeal: true
-   ```
-3. **Apply the Application Configuration:**
+2. **Apply the Application Manifest:**
+   The manifest is already in the repo at `devops/argocd/argocd-app.yaml`:
    ```bash
-   kubectl apply -f argocd-app.yaml
+   kubectl apply -f devops/argocd/argocd-app.yaml
    ```
-   ArgoCD will monitor your repository and automatically redeploy the pod replicas whenever changes are committed to your Kubernetes config files.
+3. **Verify Sync Status:**
+   ```bash
+   kubectl get application shopmart-observability -n argocd
+   ```
+4. **Access ArgoCD UI (optional):**
+   ```bash
+   kubectl port-forward svc/argocd-server -n argocd 8080:443
+   ```
+   - URL: `https://localhost:8080`
+   - Username: `admin`
+   - Password: `kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d`
+5. **GitOps Flow:**
+   - Edit `devops/k8s/*.yaml` and push to GitHub
+   - ArgoCD detects change within ~3 minutes (or click Sync in UI)
+   - Resources auto-synced: ConfigMap, Deployment, Service, Ingress, HPA
+   - `prune: true` removes resources deleted from Git
+   - `selfHeal: true` reverts manual `kubectl` changes
